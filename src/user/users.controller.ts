@@ -8,7 +8,7 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UsersService } from './services/users.service';
 import { JwtServices } from '../auth/jwt.service';
 import { User } from './user.entity';
 // import { AuthService } from 'src/auth/auth.service';
@@ -35,17 +35,21 @@ export class UsersController {
       user.email,
       user.password,
     );
+    console.log('newUser', newUser);
+    if (!newUser.success) {
+      throw new UnauthorizedException(newUser.error);
+    }
 
     const token = await this.JwtServices.generateToken({
-      username: newUser.username,
-      email: newUser.email,
+      username: newUser?.user?.username,
+      email: newUser?.user?.email,
     });
 
     return {
       ...token,
       user: {
-        username: newUser.username,
-        email: newUser.email,
+        username: newUser?.user?.username,
+        email: newUser?.user?.email,
       },
     };
   }
@@ -60,20 +64,20 @@ export class UsersController {
       user.password,
     );
 
-    if (!validatedUser) {
-      throw new UnauthorizedException('Invalid credentials');
+    if (!validatedUser.success) {
+      throw new UnauthorizedException(validatedUser.error);
     }
 
     const token = await this.JwtServices.generateToken({
-      username: validatedUser.username,
-      email: validatedUser.email,
+      username: validatedUser.user?.username,
+      email: validatedUser.user?.email,
     });
 
     return {
       ...token,
       user: {
-        username: validatedUser.username,
-        email: validatedUser.email,
+        username: validatedUser.user?.username,
+        email: validatedUser.user?.email,
       },
     };
   }

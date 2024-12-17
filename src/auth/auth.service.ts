@@ -1,6 +1,11 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../user/users.service';
+import { UsersService } from '../user/services/users.service';
 
 @Injectable()
 export class AuthService {
@@ -30,11 +35,14 @@ export class AuthService {
     email: string;
     password: string;
   }) {
-    console.log('registerDto', registerDto);
-    return this.usersService.createUser(
+    const newUser = await this.usersService.createUser(
       registerDto.username,
       registerDto.email,
       registerDto.password,
     );
+    if (!newUser.success) {
+      throw new UnauthorizedException(newUser.error);
+    }
+    return this.login(newUser.user);
   }
 }
